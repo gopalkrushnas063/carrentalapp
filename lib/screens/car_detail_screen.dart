@@ -1,3 +1,4 @@
+import 'package:carrentalapp/widgets/spec_item_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,9 +35,7 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_car == null) {
@@ -51,28 +50,53 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
       );
     }
 
+    void _navigateBack() {
+      // Check if we came from cars list
+      if (ModalRoute.of(context)?.settings.name?.contains('/cars') ?? false) {
+        context.pop();
+      } else {
+        // If not, go to cars list
+        context.go('/cars');
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            // Try to navigate back to cars list
+            _navigateBack();
+          },
         ),
         title: Text(_car!.name),
       ),
+      bottomNavigationBar: _buildBottomBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Car Image
-            SizedBox(
+            Container(
               height: 250,
               width: double.infinity,
+              color: Colors.grey[200],
               child: Image.network(
                 _car!.imageUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.directions_car,
+                      size: 100,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
               ),
             ),
-            
+
             // Car Details
             Padding(
               padding: const EdgeInsets.all(20),
@@ -82,11 +106,15 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        _car!.name,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          _car!.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
@@ -99,19 +127,16 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     '${_car!.brand} • ${_car!.model}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Rating and Type
                   Row(
                     children: [
@@ -126,10 +151,14 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(
-                              _car!.rating.toString(),
+                              _car!.rating.toStringAsFixed(1),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -157,48 +186,45 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Specifications
                   const Text(
                     'Specifications',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    childAspectRatio: 3,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
+
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
                     children: [
-                      _buildSpecItem('Transmission', _car!.transmission),
-                      _buildSpecItem('Fuel Type', _car!.fuelType),
-                      _buildSpecItem('Seats', '${_car!.seats}'),
-                      _buildSpecItem('Availability', _car!.available ? 'Available' : 'Not Available'),
+                      SpecItemCard(
+                        title: 'Transmission',
+                        value: _car!.transmission,
+                      ),
+                      SpecItemCard(title: 'Fuel Type', value: _car!.fuelType),
+                      SpecItemCard(title: 'Seats', value: '${_car!.seats}'),
+                      SpecItemCard(
+                        title: 'Status',
+                        value: _car!.available ? 'Available' : 'Booked',
+                        isAvailable: _car!.available,
+                      ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Features
                   const Text(
                     'Features',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -209,53 +235,44 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
                       );
                     }).toList(),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Description
                   const Text(
                     'Description',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   Text(
                     _car!.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Book Now Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.go('/book/${_car!.id}');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Book Now',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // SizedBox(
+                  //   width: double.infinity,
+                  //   height: 56,
+                  //   child: ElevatedButton(
+                  //     onPressed: () {
+                  //       context.go('/book/${_car!.id}');
+                  //     },
+                  //     style: ElevatedButton.styleFrom(
+                  //       backgroundColor: Colors.blue,
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(10),
+                  //       ),
+                  //     ),
+                  //     child: const Text(
+                  //       'Book Now',
+                  //       style: TextStyle(fontSize: 18, color: Colors.white),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -265,29 +282,58 @@ class _CarDetailScreenState extends ConsumerState<CarDetailScreen> {
     );
   }
 
-  Widget _buildSpecItem(String title, String value) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildBottomBar() {
+    return BottomAppBar(
+      elevation: 10,
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
+          // Price
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '\$${_car!.pricePerDay.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                Text(
+                  'per day',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+
+          // Book Button
+          SizedBox(
+            width: 160,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: () {
+                context.push('/book/${_car!.id}');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Book Now',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],

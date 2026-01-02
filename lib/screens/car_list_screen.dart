@@ -25,17 +25,7 @@ class _CarListScreenState extends ConsumerState<CarListScreen> {
     final carState = ref.watch(carListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Available Cars'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              // Profile or logout
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Available Cars')),
       body: _buildBody(carState),
     );
   }
@@ -67,7 +57,7 @@ class _CarListScreenState extends ConsumerState<CarListScreen> {
           return const Center(child: Text('No cars available'));
         }
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 16),
           itemCount: state.cars!.length,
           itemBuilder: (context, index) {
             final car = state.cars![index];
